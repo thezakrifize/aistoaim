@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AIS-AIM Quiz</title>
+<style>
+    :root {
+        --bg: #f6fbff;
+        --card: #ffffff;
+        --primary: #023047;
+        --accent: #219ebc;
+        --soft: #8ecae6;
+        --warning: #ffb703;
+        --orange: #fb8500;
+        --correct: #2e7d32;
+        --wrong: #c62828;
+        --muted: #607d8b;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        background: linear-gradient(135deg, #f6fbff, #e8f6fb);
+        color: var(--primary);
+        padding: 28px 18px 110px;
+    }
+
+    .container {
+        max-width: 920px;
+        margin: 0 auto;
+    }
+
+    header {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        padding: 28px;
+        border-radius: 28px;
+        box-shadow: 0 18px 40px rgba(2, 48, 71, 0.18);
+        margin-bottom: 24px;
+    }
+
+    header h1 {
+        margin: 0 0 8px;
+        font-size: clamp(28px, 4vw, 42px);
+        letter-spacing: -0.5px;
+    }
+
+    header p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 16px;
+    }
+
+    .top-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 18px 0 26px;
+    }
+
+    button {
+        border: none;
+        cursor: pointer;
+        border-radius: 999px;
+        font-weight: 700;
+        transition: 0.2s ease;
+    }
+
+    .reset-btn {
+        padding: 12px 18px;
+        background: var(--warning);
+        color: var(--primary);
+        box-shadow: 0 8px 20px rgba(251, 133, 0, 0.2);
+    }
+
+    .reset-btn:hover {
+        transform: translateY(-1px);
+        background: var(--orange);
+        color: white;
+    }
+
+    .question-card {
+        background: rgba(255,255,255,0.92);
+        border: 1px solid rgba(33, 158, 188, 0.18);
+        border-radius: 24px;
+        padding: 22px;
+        margin-bottom: 18px;
+        box-shadow: 0 12px 30px rgba(2, 48, 71, 0.08);
+    }
+
+    .question-title {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.45;
+    }
+
+    .q-number {
+        min-width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        background: var(--soft);
+        color: var(--primary);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+    }
+
+    .choices {
+        display: grid;
+        gap: 10px;
+    }
+
+    .choice {
+        width: 100%;
+        text-align: left;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: #f4fbfe;
+        color: var(--primary);
+        border: 2px solid transparent;
+        font-size: 15.5px;
+        line-height: 1.35;
+    }
+
+    .choice:hover:not(:disabled) {
+        border-color: var(--accent);
+        background: #e8f7fc;
+        transform: translateY(-1px);
+    }
+
+    .choice:disabled {
+        cursor: default;
+        opacity: 0.95;
+    }
+
+    .choice.correct {
+        border-color: var(--correct);
+        background: #e8f5e9;
+        color: var(--correct);
+    }
+
+    .choice.wrong {
+        border-color: var(--wrong);
+        background: #ffebee;
+        color: var(--wrong);
+    }
+
+    .feedback {
+        display: none;
+        margin-top: 14px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    .feedback.show {
+        display: block;
+    }
+
+    .feedback.correct {
+        background: #e8f5e9;
+        color: var(--correct);
+    }
+
+    .feedback.wrong {
+        background: #ffebee;
+        color: var(--wrong);
+    }
+
+    .score-bubble {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        width: 118px;
+        height: 118px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: conic-gradient(hsl(0, 80%, 45%) 0deg, #e8eef2 0deg);
+        box-shadow: 0 12px 35px rgba(2, 48, 71, 0.28);
+        z-index: 20;
+    }
+
+    .score-inner {
+        width: 92px;
+        height: 92px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--primary);
+        font-weight: 900;
+    }
+
+    .score-percent {
+        font-size: 25px;
+        line-height: 1;
+    }
+
+    .score-detail {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 5px;
+    }
+
+    .status-line {
+        color: var(--muted);
+        font-weight: 700;
+        margin-top: 8px;
+    }
+
+    @media (max-width: 520px) {
+        body {
+            padding: 16px 12px 105px;
+        }
+        header {
+            padding: 22px;
+            border-radius: 22px;
+        }
+        .question-card {
+            padding: 18px;
+            border-radius: 20px;
+        }
+        .score-bubble {
+            width: 102px;
+            height: 102px;
+        }
+        .score-inner {
+            width: 78px;
+            height: 78px;
+        }
+        .score-percent {
+            font-size: 21px;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>AIS-AIM Quiz</h1>
+        <p>20 multiple-choice questions with instant feedback and live score tracking.</p>
+        <div class="status-line" id="statusLine">Answered 0 / 20</div>
+    </header>
+
+    <div class="top-actions">
+        <button class="reset-btn" onclick="resetQuiz()">Reset Quiz</button>
+    </div>
+
+    <main id="quiz"></main>
+</div>
+
+<div class="score-bubble" id="scoreBubble">
+    <div class="score-inner">
+        <div class="score-percent" id="scorePercent">0%</div>
+        <div class="score-detail" id="scoreDetail">0 / 20</div>
+    </div>
+</div>
+
+<script>
+const questions = [
+  {
+    "q": "What does AIS stand for?",
+    "choices": {
+      "A": "Aeronautical Information Service",
+      "B": "Aviation Integrated System",
+      "C": "Aircraft Information Signal",
+      "D": "Aeronautical Inspection Standard"
+    },
+    "answer": "A",
+    "explain": "AIS stands for Aeronautical Information Service."
+  },
+  {
+    "q": "What is the primary goal of AIM?",
+    "choices": {
+      "A": "Replacing all pilots with automated systems",
+      "B": "Integrating digital aeronautical data management",
+      "C": "Reducing the number of aerodromes",
+      "D": "Publishing only paper-based information"
+    },
+    "answer": "B",
+    "explain": "The primary goal of AIM is to integrate digital aeronautical data management."
+  },
+  {
+    "q": "What is the key principle of AIM?",
+    "choices": {
+      "A": "Information should be delayed until officially printed",
+      "B": "Only pilots should receive aeronautical information",
+      "C": "The right digital information at the right time in the right place",
+      "D": "Data should be stored without validation"
+    },
+    "answer": "C",
+    "explain": "AIM focuses on providing the right digital information at the right time and in the right place."
+  },
+  {
+    "q": "Which ICAO document governs AIS?",
+    "choices": {
+      "A": "Annex 2",
+      "B": "Annex 10",
+      "C": "Annex 14",
+      "D": "Annex 15"
+    },
+    "answer": "D",
+    "explain": "AIS is governed by ICAO Annex 15."
+  },
+  {
+    "q": "What are examples of AIS products?",
+    "choices": {
+      "A": "AIP, NOTAM, and aeronautical charts",
+      "B": "Radar, radio, and transponder",
+      "C": "Runway lights, signs, and markings",
+      "D": "Flight recorder, ELT, and oxygen system"
+    },
+    "answer": "A",
+    "explain": "Examples of AIS products include AIP, NOTAM, and aeronautical charts."
+  },
+  {
+    "q": "What does AIP stand for?",
+    "choices": {
+      "A": "Aeronautical Inspection Procedure",
+      "B": "Aeronautical Information Publication",
+      "C": "Aviation International Plan",
+      "D": "Aircraft Information Program"
+    },
+    "answer": "B",
+    "explain": "AIP stands for Aeronautical Information Publication."
+  },
+  {
+    "q": "What are the three phases of the AIS-AIM transition roadmap?",
+    "choices": {
+      "A": "Planning, Testing, Publishing",
+      "B": "Collection, Storage, Distribution",
+      "C": "Consolidation, Going Digital, Information Management",
+      "D": "Design, Production, Operation"
+    },
+    "answer": "C",
+    "explain": "The three phases are Consolidation, Going Digital, and Information Management."
+  },
+  {
+    "q": "What is the focus of Phase 1: Consolidation?",
+    "choices": {
+      "A": "Establish quality requirements and identify gaps",
+      "B": "Remove all digital data",
+      "C": "Replace NOTAM with voice messages",
+      "D": "Create only graphical information"
+    },
+    "answer": "A",
+    "explain": "Phase 1 focuses on establishing quality requirements and identifying gaps."
+  },
+  {
+    "q": "What is the end goal of Phase 2: Going Digital?",
+    "choices": {
+      "A": "Use only handwritten documents",
+      "B": "Structure digital data for production processes",
+      "C": "Stop publishing aeronautical charts",
+      "D": "Limit access to aeronautical data"
+    },
+    "answer": "B",
+    "explain": "Phase 2 aims to structure digital data for production processes."
+  },
+  {
+    "q": "What is introduced in Phase 3: Information Management?",
+    "choices": {
+      "A": "Traditional paper-only distribution",
+      "B": "Standardized aeronautical data exchange model",
+      "C": "Manual-only NOTAM processing",
+      "D": "Removal of digital datasets"
+    },
+    "answer": "B",
+    "explain": "Phase 3 introduces standardized aeronautical data exchange models."
+  },
+  {
+    "q": "What does WGS 84 refer to in the AIS to AIM transition?",
+    "choices": {
+      "A": "A meteorological warning system",
+      "B": "A geodetic reference system",
+      "C": "A flight plan format",
+      "D": "A radio communication frequency"
+    },
+    "answer": "B",
+    "explain": "WGS 84 is a geodetic reference system used for accurate position data."
+  },
+  {
+    "q": "What are the three parts of the AIP?",
+    "choices": {
+      "A": "Weather, ATC, Communication",
+      "B": "Safety, Security, Operation",
+      "C": "General, En-route, Aerodrome",
+      "D": "Charts, NOTAM, Supplements"
+    },
+    "answer": "C",
+    "explain": "The AIP consists of GEN, ENR, and AD: General, En-route, and Aerodrome."
+  },
+  {
+    "q": "What type of data is classified as dynamic data?",
+    "choices": {
+      "A": "Permanent airport name",
+      "B": "Temporary changes like runway closures",
+      "C": "Historical aviation law",
+      "D": "Fixed country code only"
+    },
+    "answer": "B",
+    "explain": "Dynamic data includes temporary or frequently changing information such as runway closures."
+  },
+  {
+    "q": "What does AIXM stand for?",
+    "choices": {
+      "A": "Aeronautical Information Exchange Model",
+      "B": "Aviation Internet Exchange Method",
+      "C": "Aircraft Information Extension Module",
+      "D": "Aerodrome Inspection Exchange Manual"
+    },
+    "answer": "A",
+    "explain": "AIXM stands for Aeronautical Information Exchange Model."
+  },
+  {
+    "q": "How is a digital NOTAM different from a traditional NOTAM?",
+    "choices": {
+      "A": "It is only printed on paper",
+      "B": "It is a dataset usable by systems and automated applications",
+      "C": "It is sent only by voice communication",
+      "D": "It contains no aeronautical information"
+    },
+    "answer": "B",
+    "explain": "Digital NOTAM is structured as data so systems and automated applications can use it."
+  },
+  {
+    "q": "What is a benefit of digital NOTAM?",
+    "choices": {
+      "A": "It prevents automated processing",
+      "B": "It removes the need for aeronautical data quality",
+      "C": "It allows easier integration with automated systems",
+      "D": "It makes information less searchable"
+    },
+    "answer": "C",
+    "explain": "Digital NOTAM can be integrated more easily with automated systems."
+  },
+  {
+    "q": "What are some limitations of the current NOTAM format?",
+    "choices": {
+      "A": "Unlimited filtering and perfect map display",
+      "B": "Limited filtering capabilities and lack of geographical representation",
+      "C": "No text content at all",
+      "D": "Only graphical information with no message text"
+    },
+    "answer": "B",
+    "explain": "Current NOTAM formats may have limited filtering capabilities and lack clear geographical representation."
+  },
+  {
+    "q": "What does the AIS-AIM roadmap seek to address?",
+    "choices": {
+      "A": "Data-centric management of aeronautical information",
+      "B": "Removal of all aeronautical information",
+      "C": "Replacing ICAO standards",
+      "D": "Reducing data integrity requirements"
+    },
+    "answer": "A",
+    "explain": "The roadmap seeks to move toward data-centric management of aeronautical information."
+  },
+  {
+    "q": "What is the major benefit of transition to AIM?",
+    "choices": {
+      "A": "Lower safety and lower data integrity",
+      "B": "Improved safety through higher data integrity",
+      "C": "More paper documents only",
+      "D": "Less traceability of aeronautical data"
+    },
+    "answer": "B",
+    "explain": "Transitioning to AIM improves safety by supporting higher data integrity."
+  },
+  {
+    "q": "What is one advantage of combining textual and graphical data in AIM?",
+    "choices": {
+      "A": "It reduces clarity for users",
+      "B": "It enhances clarity for end users",
+      "C": "It removes the need for maps",
+      "D": "It hides operational information"
+    },
+    "answer": "B",
+    "explain": "Combining textual and graphical data helps enhance clarity for end users."
+  }
+];
+let answered = Array(questions.length).fill(false);
+let correctCount = 0;
+
+function renderQuiz() {
+    const quiz = document.getElementById("quiz");
+    quiz.innerHTML = "";
+
+    questions.forEach((item, index) => {
+        const card = document.createElement("section");
+        card.className = "question-card";
+        card.id = `q-${index}`;
+
+        const title = document.createElement("div");
+        title.className = "question-title";
+        title.innerHTML = `<span class="q-number">${index + 1}</span><span>${item.q}</span>`;
+        card.appendChild(title);
+
+        const choices = document.createElement("div");
+        choices.className = "choices";
+
+        Object.entries(item.choices).forEach(([key, text]) => {
+            const btn = document.createElement("button");
+            btn.className = "choice";
+            btn.innerHTML = `<strong>${key}.</strong> ${text}`;
+            btn.onclick = () => answerQuestion(index, key, btn);
+            choices.appendChild(btn);
+        });
+
+        const feedback = document.createElement("div");
+        feedback.className = "feedback";
+        feedback.id = `feedback-${index}`;
+
+        card.appendChild(choices);
+        card.appendChild(feedback);
+        quiz.appendChild(card);
+    });
+
+    updateScore();
+}
+
+function answerQuestion(index, selected, button) {
+    if (answered[index]) return;
+
+    answered[index] = true;
+    const item = questions[index];
+    const isCorrect = selected === item.answer;
+    if (isCorrect) correctCount++;
+
+    const card = document.getElementById(`q-${index}`);
+    const buttons = card.querySelectorAll(".choice");
+
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        const label = btn.textContent.trim().charAt(0);
+        if (label === item.answer) btn.classList.add("correct");
+        if (label === selected && !isCorrect) btn.classList.add("wrong");
+    });
+
+    const feedback = document.getElementById(`feedback-${index}`);
+    feedback.classList.add("show", isCorrect ? "correct" : "wrong");
+    feedback.innerHTML = isCorrect
+        ? `✅ Correct!<br>${item.explain}`
+        : `❌ Incorrect. Correct answer: <strong>${item.answer}</strong><br>${item.explain}`;
+
+    updateScore();
+}
+
+function updateScore() {
+    const totalAnswered = answered.filter(Boolean).length;
+    const percent = totalAnswered === 0 ? 0 : Math.round((correctCount / totalAnswered) * 100);
+    const finalPercent = Math.round((correctCount / questions.length) * 100);
+    const hue = Math.round((percent / 100) * 120);
+    const deg = Math.round((totalAnswered / questions.length) * 360);
+
+    document.getElementById("scorePercent").textContent = `${percent}%`;
+    document.getElementById("scoreDetail").textContent = `${correctCount} / ${questions.length}`;
+    document.getElementById("statusLine").textContent = `Answered ${totalAnswered} / ${questions.length}`;
+    document.getElementById("scoreBubble").style.background =
+        `conic-gradient(hsl(${hue}, 80%, 42%) ${deg}deg, #e8eef2 ${deg}deg)`;
+}
+
+function resetQuiz() {
+    answered = Array(questions.length).fill(false);
+    correctCount = 0;
+    renderQuiz();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+renderQuiz();
+</script>
+</body>
+</html>
